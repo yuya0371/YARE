@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   SafeAreaView,
   View,
@@ -8,11 +8,36 @@ import {
   Pressable,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Calendar } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { STORAGE_KEYS } from '../config/constants';
 import { StreakHeader } from '../components/StreakHeader';
 import { TodaySummary } from '../components/TodaySummary';
+
+type DailyRecord = {
+  date: string;        // YYYY-MM-DD
+  durationSec: number;
+  memo: string;
+  photoUri?: string;
+  completed: boolean;
+};
+
+type RecordsMap = Record<string, DailyRecord>;
+
+type StreakState = {
+  currentStreak: number;
+  maxStreak: number;
+  cumulativeStreak: number;
+  lastCompletedDate: string | null;
+};
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+const todayKey = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
 
 const HomeScreen: React.FC = () => {
   const router = useRouter();
@@ -25,9 +50,52 @@ const HomeScreen: React.FC = () => {
   const [todayDurationMin, setTodayDurationMin] = useState(0);
   const [todayMemo, setTodayMemo] = useState('');
 
-  useEffect(() => {
-    // TODO: storageからロードして差し替え
+  const loadFromStorage = useCallback(async () => {
+    try {
+      const [recordsJson, streakJson] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.records),
+        AsyncStorage.getItem(STORAGE_KEYS.streak),
+      ]);
+
+      // --- streak ---
+      const streak: StreakState | null = streakJson ? JSON.parse(streakJson) : null;
+      setCurrentStreak(streak?.currentStreak ?? 0);
+      setMaxStreak(streak?.maxStreak ?? 0);
+      setCumulativeStreak(streak?.cumulativeStreak ?? 0);
+
+      // --- today record ---
+      const records: RecordsMap = recordsJson ? JSON.parse(recordsJson) : {};
+      const tKey = todayKey();
+      const today = records[tKey];
+
+      const completed = Boolean(today?.completed);
+      setTodayCompleted(completed);
+
+      if (completed && today) {
+        setTodayDurationMin(Math.max(0, Math.round((today.durationSec ?? 0) / 60)));
+        setTodayMemo(today.memo ?? '');
+      } else {
+        setTodayDurationMin(0);
+        setTodayMemo('');
+      }
+    } catch (e) {
+      // 壊れたJSON等でも落ちないように初期化
+      setTodayCompleted(false);
+      setTodayDurationMin(0);
+      setTodayMemo('');
+      setCurrentStreak(0);
+      setMaxStreak(0);
+      setCumulativeStreak(0);
+    }
   }, []);
+
+  // 画面に戻ってきたタイミングで必ず再ロード
+  useFocusEffect(
+    useCallback(() => {
+      loadFromStorage();
+      return () => {};
+    }, [loadFromStorage])
+  ); // useFocusEffectはExpo Routerのフック [web:53]
 
   const handleStart = () => {
     if (todayCompleted) return;
@@ -51,7 +119,11 @@ const HomeScreen: React.FC = () => {
           </View>
 
           <View style={styles.summaryBlock}>
-            <TodaySummary completed={todayCompleted} durationMin={todayDurationMin} memoPreview={todayMemo} />
+            <TodaySummary
+              completed={todayCompleted}
+              durationMin={todayDurationMin}
+              memoPreview={todayMemo}
+            />
           </View>
 
           {!todayCompleted ? (
