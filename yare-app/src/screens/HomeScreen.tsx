@@ -195,7 +195,7 @@ const HomeScreen: React.FC = () => {
             onPress={handleStart}
             style={styles.startButton}
           >
-            <Text style={styles.startButtonText}>やる</Text>
+            <Text style={styles.startButtonText}>今すぐYARE</Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.doneButton}>

@@ -113,8 +113,8 @@ export default function TaskFinishScreen() {
               <View style={styles.checkCircle}>
                 <CheckCircle size={40} color={colors.success} />
               </View>
-              <Text style={styles.title}>お疲れさま!</Text>
-              <Text style={styles.subTitle}>{durationLabel} 勉強したね</Text>
+              <Text style={styles.title}>今日もYAREたね!</Text>
+              <Text style={styles.subTitle}>{durationLabel} がんばった</Text>
             </View>
 
             {/* Memo Input */}
