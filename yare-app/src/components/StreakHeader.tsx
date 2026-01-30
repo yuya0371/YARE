@@ -45,12 +45,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 6,
+    marginTop: 10,
   },
 
   flame: {
-    fontSize: 28,
-    marginRight: 10,
+    fontSize: 38,
+    marginRight: 12,
     opacity: 0.95,
   },
 
@@ -59,15 +59,15 @@ const styles = StyleSheet.create({
   },
 
   current: {
-    fontSize: 44,
-    lineHeight: 48,
+    fontSize: 56,
+    lineHeight: 62,
     color: '#F97316',
     fontWeight: Platform.select({ ios: '800', android: '800' }),
   },
 
   label: {
-    marginTop: 2,
-    fontSize: 12,
+    marginTop: 4,
+    fontSize: 14,
     color: '#374151',
     fontWeight: Platform.select({ ios: '600', android: '600' }),
   },
@@ -75,15 +75,15 @@ const styles = StyleSheet.create({
   chipsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 14,
-    marginTop: 12,
+    gap: 16,
+    marginTop: 18,
   },
 
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     borderRadius: 999,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
@@ -91,12 +91,12 @@ const styles = StyleSheet.create({
   },
 
   chipIcon: {
-    fontSize: 14,
+    fontSize: 15,
     marginRight: 8,
   },
 
   chipText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#374151',
     fontWeight: Platform.select({ ios: '600', android: '600' }),
   },

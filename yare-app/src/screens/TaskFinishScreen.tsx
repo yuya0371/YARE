@@ -197,14 +197,14 @@ const styles = StyleSheet.create({
     borderColor: '#F97316',
     borderRadius: 12,
     backgroundColor: '#fff',
-    minHeight: 120,
+    height: 160,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   photoIcon: { fontSize: 22, marginBottom: 6 },
   photoText: { fontSize: 13, color: '#6B7280' },
-  photoPreview: { width: '100%', height: '100%' },
+  photoPreview: { width: '100%', height: 160 },
 
   doneButton: {
     marginTop: 18,
