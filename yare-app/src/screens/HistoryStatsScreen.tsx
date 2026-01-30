@@ -53,15 +53,23 @@ const HistoryStatsScreen: React.FC = () => {
   const [detailOpen, setDetailOpen] = useState(false);
 
   const load = useCallback(async () => {
-    const [recordsJson, streakJson] = await Promise.all([
-      AsyncStorage.getItem(STORAGE_KEYS.records),
-      AsyncStorage.getItem(STORAGE_KEYS.streak),
-    ]);
+    try {
+      const [recordsJson, streakJson] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.records),
+        AsyncStorage.getItem(STORAGE_KEYS.streak),
+      ]);
 
-    setRecords(recordsJson ? JSON.parse(recordsJson) : {});
-    setStreak(streakJson ? JSON.parse(streakJson) : {
-      currentStreak: 0, maxStreak: 0, cumulativeStreak: 0, lastCompletedDate: null,
-    });
+      setRecords(recordsJson ? JSON.parse(recordsJson) : {});
+      setStreak(streakJson ? JSON.parse(streakJson) : {
+        currentStreak: 0, maxStreak: 0, cumulativeStreak: 0, lastCompletedDate: null,
+      });
+    } catch (e) {
+      console.error('Failed to load history data:', e);
+      setRecords({});
+      setStreak({
+        currentStreak: 0, maxStreak: 0, cumulativeStreak: 0, lastCompletedDate: null,
+      });
+    }
   }, []);
 
   useFocusEffect(

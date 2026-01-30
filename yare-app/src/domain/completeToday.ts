@@ -74,8 +74,12 @@ export async function completeToday(params: {
     [STORAGE_KEYS.widget, JSON.stringify(widget)],
   ]);
 
-  // 5) 本日の通知をキャンセル
-  await onTaskCompleted();
+  // 5) 本日の通知をキャンセル（失敗しても保存は成功扱い）
+  try {
+    await onTaskCompleted();
+  } catch (e) {
+    console.error('Failed to cancel notifications:', e);
+  }
 
   return { record: records[todayKey], streak: nextStreak, widget };
 }

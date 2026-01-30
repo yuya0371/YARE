@@ -74,8 +74,8 @@ const TaskScreen: React.FC = () => {
           <View style={styles.clockCircle}>
             <Clock size={32} color={colors.primary} />
           </View>
-          <Text style={styles.taskTitle}>勉強タスク</Text>
-          <Text style={styles.subTitle}>今日も少しだけやろう</Text>
+          <Text style={styles.taskTitle}>今日のYARE</Text>
+          <Text style={styles.subTitle}>1分だけでいいからね</Text>
         </View>
 
         {/* Timer Display */}
