@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../config/constants';
 import { toDateKey } from './dateUtils';
 import { applyCompleteToday, type StreakState } from './streakLogic';
+import { onTaskCompleted } from '../services/notifications';
 
 export type DailyRecord = {
   date: string;        // YYYY-MM-DD
@@ -72,6 +73,9 @@ export async function completeToday(params: {
     [STORAGE_KEYS.streak, JSON.stringify(nextStreak)],
     [STORAGE_KEYS.widget, JSON.stringify(widget)],
   ]);
+
+  // 5) 本日の通知をキャンセル
+  await onTaskCompleted();
 
   return { record: records[todayKey], streak: nextStreak, widget };
 }

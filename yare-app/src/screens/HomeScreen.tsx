@@ -15,6 +15,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { STORAGE_KEYS } from '../config/constants';
 import { useTheme } from '../theme/useTheme';
+import {
+  sendTestNotificationNow,
+  sendTestNotificationDelayed,
+  logScheduledNotifications,
+  syncNotifications,
+} from '../services/notifications';
 
 type DailyRecord = {
   date: string;
@@ -200,11 +206,49 @@ const HomeScreen: React.FC = () => {
         {/* Footer */}
         <Text style={styles.footer}>毎日1分、継続が力になる</Text>
 
-        {/* DEV: テスト用リセットボタン */}
+        {/* DEV: テスト用ボタン */}
         {__DEV__ && (
-          <Pressable onPress={handleResetToday} style={styles.devResetButton}>
-            <Text style={styles.devResetText}>DEV: 本日分をリセット</Text>
-          </Pressable>
+          <View style={styles.devContainer}>
+            <Pressable onPress={handleResetToday} style={styles.devButton}>
+              <Text style={styles.devButtonText}>リセット</Text>
+            </Pressable>
+            <Pressable
+              onPress={async () => {
+                await sendTestNotificationNow();
+                Alert.alert('送信完了', '即時通知を送信したよ');
+              }}
+              style={styles.devButton}
+            >
+              <Text style={styles.devButtonText}>即時通知</Text>
+            </Pressable>
+            <Pressable
+              onPress={async () => {
+                await sendTestNotificationDelayed();
+                Alert.alert('スケジュール完了', '5秒後に通知が届くよ');
+              }}
+              style={styles.devButton}
+            >
+              <Text style={styles.devButtonText}>5秒後</Text>
+            </Pressable>
+            <Pressable
+              onPress={async () => {
+                await logScheduledNotifications();
+                Alert.alert('確認', 'コンソールにログを出力したよ');
+              }}
+              style={styles.devButton}
+            >
+              <Text style={styles.devButtonText}>ログ</Text>
+            </Pressable>
+            <Pressable
+              onPress={async () => {
+                await syncNotifications();
+                Alert.alert('同期完了', '通知を再スケジュールしたよ');
+              }}
+              style={styles.devButton}
+            >
+              <Text style={styles.devButtonText}>再同期</Text>
+            </Pressable>
+          </View>
         )}
       </View>
     </SafeAreaView>
@@ -370,16 +414,21 @@ const createStyles = (
       textAlign: 'center',
     },
 
-    devResetButton: {
+    devContainer: {
       marginTop: 24,
-      paddingVertical: 10,
-      paddingHorizontal: 16,
-      backgroundColor: isDark ? '#7F1D1D' : '#FEE2E2',
-      borderRadius: 8,
-      alignSelf: 'center',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: 8,
     },
-    devResetText: {
-      fontSize: 12,
+    devButton: {
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      backgroundColor: isDark ? '#7F1D1D' : '#FEE2E2',
+      borderRadius: 6,
+    },
+    devButtonText: {
+      fontSize: 11,
       color: '#EF4444',
       fontWeight: Platform.select({ ios: '600', android: '600' }),
     },
