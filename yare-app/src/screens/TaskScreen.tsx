@@ -9,7 +9,9 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Play, Pause, Square } from 'lucide-react-native';
+import { Play, Pause, Square, Clock } from 'lucide-react-native';
+
+import { useTheme } from '../theme/useTheme';
 
 function formatHHMMSS(totalSec: number) {
   const h = Math.floor(totalSec / 3600);
@@ -21,6 +23,7 @@ function formatHHMMSS(totalSec: number) {
 
 const TaskScreen: React.FC = () => {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
 
   const [hasStarted, setHasStarted] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -58,148 +61,203 @@ const TaskScreen: React.FC = () => {
 
   const onEnd = () => {
     setIsRunning(false);
-
-    // TODO: ここで「メモ入力画面」へ遷移して record 保存 → 完了 までやる
-    // 要件：メモ1文字以上必須。時間は1秒でもOK。[file:1]
-    // 例: router.push({ pathname: '/task-finish', params: { durationSec: String(elapsedSec) } })
     router.push({ pathname: '/task-finish', params: { durationSec: String(elapsedSec) } });
   };
+
+  const styles = createStyles(colors, isDark);
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.screen}>
+        {/* Header */}
         <View style={styles.header}>
+          <View style={styles.clockCircle}>
+            <Clock size={32} color={colors.primary} />
+          </View>
           <Text style={styles.taskTitle}>勉強タスク</Text>
           <Text style={styles.subTitle}>今日も少しだけやろう</Text>
         </View>
 
-        <Text style={styles.timer}>{timeText}</Text>
+        {/* Timer Display */}
+        <View style={styles.timerContainer}>
+          <Text style={styles.timer}>{timeText}</Text>
+          {hasStarted && (
+            <Text style={styles.timerStatus}>
+              {isRunning ? '計測中...' : '一時停止中'}
+            </Text>
+          )}
+        </View>
 
-        {!hasStarted ? (
-          <TouchableOpacity activeOpacity={0.9} onPress={onStart} style={styles.primaryButton}>
-            <Play size={18} color="#fff" />
-            <Text style={styles.primaryButtonText}>開始</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.actions}>
+        {/* Controls */}
+        <View style={styles.controls}>
+          {!hasStarted ? (
             <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={onTogglePause}
-              style={styles.pauseButton}
+              activeOpacity={0.85}
+              onPress={onStart}
+              style={styles.primaryButton}
             >
-              {isRunning ? <Pause size={18} color="#111827" /> : <Play size={18} color="#111827" />}
-              <Text style={styles.pauseButtonText}>
-                {isRunning ? '一時停止' : '再開'}
-              </Text>
+              <Play size={22} color="#FFFFFF" fill="#FFFFFF" />
+              <Text style={styles.primaryButtonText}>開始</Text>
             </TouchableOpacity>
+          ) : (
+            <View style={styles.actions}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={onTogglePause}
+                style={styles.secondaryButton}
+              >
+                {isRunning ? (
+                  <Pause size={20} color={colors.text} />
+                ) : (
+                  <Play size={20} color={colors.text} fill={colors.text} />
+                )}
+                <Text style={styles.secondaryButtonText}>
+                  {isRunning ? '一時停止' : '再開'}
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity activeOpacity={0.9} onPress={onEnd} style={styles.endButton}>
-              <Square size={18} color="#fff" />
-              <Text style={styles.endButtonText}>終了</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={onEnd}
+                style={styles.endButton}
+              >
+                <Square size={20} color="#FFFFFF" fill="#FFFFFF" />
+                <Text style={styles.endButtonText}>終了</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
 
+        {/* Back */}
         <Pressable onPress={() => router.back()} style={styles.back}>
-          <Text style={styles.backText}>戻る</Text>
+          <Text style={styles.backText}>キャンセル</Text>
         </Pressable>
       </View>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#EEF2FF' }, // うす青グラデっぽい雰囲気
-  screen: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 90,
-    paddingHorizontal: 20,
-  },
+const createStyles = (
+  colors: ReturnType<typeof import('../theme/useTheme').useTheme>['colors'],
+  isDark: boolean
+) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    screen: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      paddingTop: 60,
+      paddingHorizontal: 24,
+    },
 
-  header: { alignItems: 'center', marginBottom: 30 },
-  taskTitle: {
-    fontSize: 20,
-    fontWeight: Platform.select({ ios: '700', android: '700' }),
-    color: '#111827',
-  },
-  subTitle: {
-    marginTop: 6,
-    fontSize: 14,
-    color: '#6B7280',
-    fontWeight: Platform.select({ ios: '500', android: '500' }),
-  },
+    header: {
+      alignItems: 'center',
+      marginBottom: 40,
+    },
+    clockCircle: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.primaryMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 20,
+    },
+    taskTitle: {
+      fontSize: 24,
+      fontWeight: Platform.select({ ios: '700', android: '700' }),
+      color: colors.text,
+    },
+    subTitle: {
+      marginTop: 8,
+      fontSize: 15,
+      color: colors.textSecondary,
+      fontWeight: Platform.select({ ios: '500', android: '500' }),
+    },
 
-  timer: {
-    fontSize: 64,
-    color: '#2563EB',
-    fontWeight: Platform.select({ ios: '800', android: '800' }),
-    letterSpacing: 2,
-    marginBottom: 26,
-  },
+    timerContainer: {
+      alignItems: 'center',
+      marginBottom: 48,
+    },
+    timer: {
+      fontSize: 72,
+      color: colors.primary,
+      fontWeight: Platform.select({ ios: '800', android: '800' }),
+      letterSpacing: 2,
+      fontVariant: ['tabular-nums'],
+    },
+    timerStatus: {
+      marginTop: 8,
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
 
-  primaryButton: {
-    width: '100%',
-    maxWidth: 320,
-    height: 62,
-    backgroundColor: '#2F7CF6',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 10,
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: Platform.select({ ios: '700', android: '700' }),
-  },
+    controls: {
+      width: '100%',
+      maxWidth: 340,
+    },
 
-  actions: {
-    width: '100%',
-    maxWidth: 320,
-    gap: 14,
-  },
+    primaryButton: {
+      height: 60,
+      backgroundColor: colors.primary,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+      gap: 12,
+    },
+    primaryButtonText: {
+      color: '#FFFFFF',
+      fontSize: 18,
+      fontWeight: Platform.select({ ios: '700', android: '700' }),
+    },
 
-  pauseButton: {
-    height: 58,
-    backgroundColor: '#FBBF24',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.15)',
-  },
-  pauseButtonText: {
-    color: '#111827',
-    fontSize: 17,
-    fontWeight: Platform.select({ ios: '700', android: '700' }),
-  },
+    actions: {
+      gap: 14,
+    },
 
-  endButton: {
-    height: 58,
-    backgroundColor: '#22C55E',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 10,
-  },
-  endButtonText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: Platform.select({ ios: '700', android: '700' }),
-  },
+    secondaryButton: {
+      height: 56,
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+      gap: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    secondaryButtonText: {
+      color: colors.text,
+      fontSize: 17,
+      fontWeight: Platform.select({ ios: '600', android: '600' }),
+    },
 
-  back: { marginTop: 18, padding: 10 },
-  backText: {
-    color: '#6B7280',
-    fontSize: 13,
-    fontWeight: Platform.select({ ios: '600', android: '600' }),
-  },
-});
+    endButton: {
+      height: 56,
+      backgroundColor: colors.success,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+      gap: 10,
+    },
+    endButtonText: {
+      color: '#FFFFFF',
+      fontSize: 17,
+      fontWeight: Platform.select({ ios: '700', android: '700' }),
+    },
+
+    back: {
+      marginTop: 24,
+      padding: 12,
+    },
+    backText: {
+      color: colors.textMuted,
+      fontSize: 14,
+      fontWeight: Platform.select({ ios: '500', android: '500' }),
+    },
+  });
 
 export default TaskScreen;

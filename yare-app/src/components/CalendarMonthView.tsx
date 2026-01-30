@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
+import type { Colors } from '../theme/colors';
 
 type Props = {
   year: number;
@@ -7,6 +8,7 @@ type Props = {
   completedSet: Set<string>; // YYYY-MM-DD
   selectedDate?: string | null;
   onPressDate?: (dateKey: string) => void;
+  colors: typeof Colors.light;
 };
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -21,6 +23,7 @@ export const CalendarMonthView: React.FC<Props> = ({
   completedSet,
   selectedDate,
   onPressDate,
+  colors,
 }) => {
   const todayKey = useMemo(() => toDateKey(new Date()), []);
 
@@ -28,23 +31,20 @@ export const CalendarMonthView: React.FC<Props> = ({
     const first = new Date(year, month, 1);
     const last = new Date(year, month + 1, 0);
 
-    const firstWeekday = first.getDay(); // 0=Sun
+    const firstWeekday = first.getDay();
     const totalDays = last.getDate();
 
     const arr: Array<{ key: string; day: number; inMonth: boolean }> = [];
 
-    // 先頭の空白
     for (let i = 0; i < firstWeekday; i++) {
       arr.push({ key: `blank-${i}`, day: 0, inMonth: false });
     }
 
-    // 日付
     for (let d = 1; d <= totalDays; d++) {
       const key = toDateKey(new Date(year, month, d));
       arr.push({ key, day: d, inMonth: true });
     }
 
-    // 末尾を6週固定にしたいなら埋める（見た目安定）
     while (arr.length < 42) {
       arr.push({ key: `blank-tail-${arr.length}`, day: 0, inMonth: false });
     }
@@ -52,11 +52,20 @@ export const CalendarMonthView: React.FC<Props> = ({
     return arr;
   }, [year, month]);
 
+  const styles = createStyles(colors);
+
   return (
     <View>
       <View style={styles.weekRow}>
-        {WEEK_LABELS.map((w) => (
-          <Text key={w} style={[styles.weekLabel, w === '日' && styles.sun]}>
+        {WEEK_LABELS.map((w, i) => (
+          <Text
+            key={w}
+            style={[
+              styles.weekLabel,
+              i === 0 && styles.sunday,
+              i === 6 && styles.saturday,
+            ]}
+          >
             {w}
           </Text>
         ))}
@@ -84,7 +93,12 @@ export const CalendarMonthView: React.FC<Props> = ({
                   isSelected && styles.selectedRing,
                 ]}
               >
-                <Text style={[styles.dayText, isCompleted && styles.completedText]}>
+                <Text
+                  style={[
+                    styles.dayText,
+                    isCompleted && styles.completedText,
+                  ]}
+                >
                   {c.day}
                 </Text>
               </View>
@@ -96,61 +110,66 @@ export const CalendarMonthView: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  weekRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 6,
-    marginBottom: 10,
-  },
-  weekLabel: {
-    width: 36,
-    textAlign: 'center',
-    fontSize: 12,
-    color: '#6B7280',
-    fontWeight: Platform.select({ ios: '600', android: '600' }),
-  },
-  sun: { color: '#F97316' },
+const createStyles = (colors: typeof Colors.light) =>
+  StyleSheet.create({
+    weekRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: 4,
+      marginBottom: 12,
+    },
+    weekLabel: {
+      width: 40,
+      textAlign: 'center',
+      fontSize: 12,
+      color: colors.textSecondary,
+      fontWeight: Platform.select({ ios: '600', android: '600' }),
+    },
+    sunday: { color: colors.primary },
+    saturday: { color: '#3B82F6' },
 
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: 6,
-  },
-  cell: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-  },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      paddingHorizontal: 4,
+    },
+    cell: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
 
-  dayCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayText: {
-    fontSize: 12,
-    color: '#111827',
-    fontWeight: Platform.select({ ios: '600', android: '600' }),
-  },
+    dayCircle: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dayText: {
+      fontSize: 14,
+      color: colors.text,
+      fontWeight: Platform.select({ ios: '500', android: '500' }),
+    },
 
-  completedCircle: {
-    backgroundColor: '#F97316',
-  },
-  completedText: { color: '#fff' },
+    completedCircle: {
+      backgroundColor: colors.primary,
+    },
+    completedText: {
+      color: '#FFFFFF',
+      fontWeight: Platform.select({ ios: '700', android: '700' }),
+    },
 
-  todayCircle: {
-    borderWidth: 1.5,
-    borderColor: 'rgba(249, 115, 22, 0.35)',
-  },
+    todayCircle: {
+      borderWidth: 2,
+      borderColor: colors.primary,
+    },
 
-  selectedRing: {
-    borderWidth: 2,
-    borderColor: '#111827',
-  },
-});
+    selectedRing: {
+      borderWidth: 2,
+      borderColor: colors.text,
+    },
+  });
