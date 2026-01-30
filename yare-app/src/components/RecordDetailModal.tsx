@@ -9,6 +9,8 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
+import { X, Clock, FileText, Camera } from 'lucide-react-native';
+import type { Colors } from '../theme/colors';
 
 type Props = {
   visible: boolean;
@@ -17,6 +19,7 @@ type Props = {
   memo: string;
   photoUri?: string;
   onClose: () => void;
+  colors: typeof Colors.light;
 };
 
 const formatDuration = (sec: number): string => {
@@ -33,6 +36,7 @@ export const RecordDetailModal: React.FC<Props> = ({
   memo,
   photoUri,
   onClose,
+  colors,
 }) => {
   const [photoExpanded, setPhotoExpanded] = useState(false);
 
@@ -41,43 +45,69 @@ export const RecordDetailModal: React.FC<Props> = ({
     onClose();
   };
 
+  const styles = createStyles(colors);
+
   return (
     <>
       <Modal visible={visible} transparent animationType="fade">
         <Pressable style={styles.backdrop} onPress={handleClose}>
           <Pressable style={styles.card} onPress={() => {}}>
+            {/* Header */}
             <View style={styles.header}>
               <Text style={styles.dateText}>{dateLabel}</Text>
-              <Pressable onPress={handleClose} hitSlop={12}>
-                <Text style={styles.close}>×</Text>
+              <Pressable onPress={handleClose} hitSlop={12} style={styles.closeBtn}>
+                <X size={20} color={colors.textSecondary} />
               </Pressable>
             </View>
 
+            {/* Duration */}
             <View style={styles.row}>
-              <Text style={styles.label}>勉強時間</Text>
-              <Text style={styles.value}>{formatDuration(durationSec)}</Text>
+              <View style={styles.rowIcon}>
+                <Clock size={16} color={colors.primary} />
+              </View>
+              <View>
+                <Text style={styles.label}>勉強時間</Text>
+                <Text style={styles.value}>{formatDuration(durationSec)}</Text>
+              </View>
             </View>
 
-            <View style={[styles.row, { marginTop: 10 }]}>
-              <Text style={styles.label}>メモ</Text>
-              <Text style={styles.memo}>{memo}</Text>
+            {/* Memo */}
+            <View style={styles.row}>
+              <View style={styles.rowIcon}>
+                <FileText size={16} color={colors.primary} />
+              </View>
+              <View style={styles.memoContainer}>
+                <Text style={styles.label}>メモ</Text>
+                <Text style={styles.memo}>{memo}</Text>
+              </View>
             </View>
 
+            {/* Photo */}
             {photoUri ? (
-              <View style={[styles.row, { marginTop: 12 }]}>
-                <Text style={styles.label}>写真</Text>
-                <Pressable
-                  style={styles.photoFrame}
-                  onPress={() => setPhotoExpanded(true)}
-                >
-                  <Image source={{ uri: photoUri }} style={styles.photo} resizeMode="cover" />
-                </Pressable>
+              <View style={styles.row}>
+                <View style={styles.rowIcon}>
+                  <Camera size={16} color={colors.primary} />
+                </View>
+                <View style={styles.photoContainer}>
+                  <Text style={styles.label}>写真</Text>
+                  <Pressable
+                    style={styles.photoFrame}
+                    onPress={() => setPhotoExpanded(true)}
+                  >
+                    <Image
+                      source={{ uri: photoUri }}
+                      style={styles.photo}
+                      resizeMode="cover"
+                    />
+                  </Pressable>
+                </View>
               </View>
             ) : null}
           </Pressable>
         </Pressable>
       </Modal>
 
+      {/* Expanded Photo Modal */}
       <Modal visible={photoExpanded} transparent animationType="fade">
         <Pressable style={styles.expandedBackdrop} onPress={() => setPhotoExpanded(false)}>
           <Image
@@ -91,76 +121,95 @@ export const RecordDetailModal: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 22,
-  },
-  card: {
-    width: '100%',
-    maxWidth: 320,
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 14,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  dateText: {
-    fontSize: 14,
-    fontWeight: Platform.select({ ios: '700', android: '700' }),
-    color: '#111827',
-  },
-  close: {
-    fontSize: 18,
-    color: '#6B7280',
-    fontWeight: Platform.select({ ios: '700', android: '700' }),
-  },
+const createStyles = (colors: typeof Colors.light) =>
+  StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 24,
+    },
+    card: {
+      width: '100%',
+      maxWidth: 340,
+      backgroundColor: colors.surface,
+      borderRadius: 20,
+      padding: 20,
+    },
 
-  row: {},
-  label: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginBottom: 6,
-    fontWeight: Platform.select({ ios: '600', android: '600' }),
-  },
-  value: {
-    fontSize: 14,
-    color: '#2563EB',
-    fontWeight: Platform.select({ ios: '800', android: '800' }),
-  },
-  memo: {
-    fontSize: 13,
-    color: '#111827',
-    fontWeight: Platform.select({ ios: '600', android: '600' }),
-  },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 20,
+    },
+    dateText: {
+      fontSize: 18,
+      fontWeight: Platform.select({ ios: '700', android: '700' }),
+      color: colors.text,
+    },
+    closeBtn: {
+      padding: 4,
+    },
 
-  photoFrame: {
-    width: '100%',
-    height: 160,
-    borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: '#F3F4F6',
-  },
-  photo: {
-    width: '100%',
-    height: '100%',
-  },
+    row: {
+      flexDirection: 'row',
+      marginBottom: 16,
+    },
+    rowIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      backgroundColor: colors.primaryMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+    label: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginBottom: 4,
+      fontWeight: Platform.select({ ios: '500', android: '500' }),
+    },
+    value: {
+      fontSize: 16,
+      color: colors.text,
+      fontWeight: Platform.select({ ios: '700', android: '700' }),
+    },
+    memoContainer: {
+      flex: 1,
+    },
+    memo: {
+      fontSize: 15,
+      color: colors.text,
+      fontWeight: Platform.select({ ios: '500', android: '500' }),
+      lineHeight: 22,
+    },
 
-  expandedBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  expandedPhoto: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height * 0.8,
-  },
-});
+    photoContainer: {
+      flex: 1,
+    },
+    photoFrame: {
+      width: '100%',
+      height: 140,
+      borderRadius: 12,
+      overflow: 'hidden',
+      backgroundColor: colors.background,
+    },
+    photo: {
+      width: '100%',
+      height: '100%',
+    },
+
+    expandedBackdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.95)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    expandedPhoto: {
+      width: Dimensions.get('window').width,
+      height: Dimensions.get('window').height * 0.8,
+    },
+  });

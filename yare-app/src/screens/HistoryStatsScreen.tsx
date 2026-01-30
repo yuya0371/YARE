@@ -8,12 +8,14 @@ import {
   Pressable,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { ChevronLeft, ChevronRight, Trophy, TrendingUp, Calendar, Target } from 'lucide-react-native';
 
 import { STORAGE_KEYS } from '../config/constants';
 import { CalendarMonthView } from '../components/CalendarMonthView';
 import { RecordDetailModal } from '../components/RecordDetailModal';
 import { calcRecentDays, calcThisMonthStats, type RecordsMap } from '../domain/statsLogic';
+import { useTheme } from '../theme/useTheme';
 
 type StreakState = {
   currentStreak: number;
@@ -21,10 +23,6 @@ type StreakState = {
   cumulativeStreak: number;
   lastCompletedDate: string | null;
 };
-
-const pad2 = (n: number) => String(n).padStart(2, '0');
-const toDateKey = (d: Date) =>
-  `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 
 const JP_WEEK = ['日', '月', '火', '水', '木', '金', '土'];
 const formatJpDateLabel = (dateKey: string) => {
@@ -34,17 +32,10 @@ const formatJpDateLabel = (dateKey: string) => {
   return `${m}月${d}日（${w}）`;
 };
 
-const StatCard = ({ title, value, sub }: { title: string; value: string; sub: string }) => {
-  return (
-    <View style={styles.statCard}>
-      <Text style={styles.statTitle}>{title}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statSub}>{sub}</Text>
-    </View>
-  );
-};
-
 const HistoryStatsScreen: React.FC = () => {
+  const router = useRouter();
+  const { colors, isDark } = useTheme();
+
   const [records, setRecords] = useState<RecordsMap>({});
   const [streak, setStreak] = useState<StreakState>({
     currentStreak: 0,
@@ -53,7 +44,6 @@ const HistoryStatsScreen: React.FC = () => {
     lastCompletedDate: null,
   });
 
-  // 表示中の月
   const [cursor, setCursor] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -91,7 +81,6 @@ const HistoryStatsScreen: React.FC = () => {
 
   const monthStats = useMemo(() => calcThisMonthStats(records, cursor), [records, cursor]);
   const recent7 = useMemo(() => calcRecentDays(records, new Date(), 7), [records]);
-  const recent30 = useMemo(() => calcRecentDays(records, new Date(), 30), [records]);
 
   const monthRate = useMemo(() => {
     if (monthStats.totalDays === 0) return 0;
@@ -113,45 +102,70 @@ const HistoryStatsScreen: React.FC = () => {
   };
 
   const onPressDate = (dateKey: string) => {
-    // 達成日だけ詳細表示（要件通り）[file:220]
     if (!completedSet.has(dateKey)) return;
-
     setSelectedDate(dateKey);
     setDetailOpen(true);
   };
 
   const selectedRecord = selectedDate ? records[selectedDate] : undefined;
 
+  const styles = createStyles(colors, isDark);
+
+  const StatCard = ({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) => (
+    <View style={styles.statCard}>
+      <View style={styles.statIcon}>{icon}</View>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.screen}>
-        <Text style={styles.title}>履歴・統計</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} hitSlop={12}>
+            <ChevronLeft size={24} color={colors.textSecondary} />
+          </Pressable>
+          <Text style={styles.headerTitle}>履歴・統計</Text>
+          <View style={{ width: 24 }} />
+        </View>
 
+        {/* Stats Grid */}
         <View style={styles.statsGrid}>
-          <StatCard title="最大ストリーク" value={`${streak.maxStreak}`} sub="日" />
-          <StatCard title="累積ストリーク" value={`${streak.cumulativeStreak}`} sub="日" />
           <StatCard
-            title={`${cursor.getMonth() + 1}月の達成率`}
-            value={`${monthRate}%`}
-            sub={`${monthStats.completedDays}/${monthStats.totalDays}日`}
+            icon={<Trophy size={20} color={colors.primary} />}
+            value={`${streak.maxStreak}`}
+            label="最長"
           />
           <StatCard
-            title="直近の達成"
-            value={`${recent7.completedCount}`}
-            sub={`/7日（30日: ${recent30.completedCount}日）`}
+            icon={<TrendingUp size={20} color={colors.primary} />}
+            value={`${streak.cumulativeStreak}`}
+            label="累積"
+          />
+          <StatCard
+            icon={<Target size={20} color={colors.primary} />}
+            value={`${monthRate}%`}
+            label={`${cursor.getMonth() + 1}月`}
+          />
+          <StatCard
+            icon={<Calendar size={20} color={colors.primary} />}
+            value={`${recent7.completedCount}/7`}
+            label="直近"
           />
         </View>
 
+        {/* Calendar */}
         <View style={styles.calendarCard}>
           <View style={styles.monthHeader}>
-            <Pressable onPress={onPrevMonth} hitSlop={10} style={styles.arrowBtn}>
-              <Text style={styles.arrow}>‹</Text>
+            <Pressable onPress={onPrevMonth} hitSlop={12} style={styles.arrowBtn}>
+              <ChevronLeft size={22} color={colors.text} />
             </Pressable>
 
             <Text style={styles.monthTitle}>{monthLabel}</Text>
 
-            <Pressable onPress={onNextMonth} hitSlop={10} style={styles.arrowBtn}>
-              <Text style={styles.arrow}>›</Text>
+            <Pressable onPress={onNextMonth} hitSlop={12} style={styles.arrowBtn}>
+              <ChevronRight size={22} color={colors.text} />
             </Pressable>
           </View>
 
@@ -161,6 +175,7 @@ const HistoryStatsScreen: React.FC = () => {
             completedSet={completedSet}
             selectedDate={selectedDate}
             onPressDate={onPressDate}
+            colors={colors}
           />
         </View>
 
@@ -171,72 +186,90 @@ const HistoryStatsScreen: React.FC = () => {
           memo={selectedRecord?.memo ?? ''}
           photoUri={selectedRecord?.photoUri}
           onClose={() => setDetailOpen(false)}
+          colors={colors}
         />
-
       </View>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F3F4F6' },
-  screen: { flex: 1, paddingHorizontal: 18, paddingTop: 16 },
+const createStyles = (
+  colors: ReturnType<typeof import('../theme/useTheme').useTheme>['colors'],
+  isDark: boolean
+) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    screen: {
+      flex: 1,
+      paddingHorizontal: 20,
+      paddingTop: 8,
+    },
 
-  title: {
-    fontSize: 16,
-    color: '#111827',
-    fontWeight: Platform.select({ ios: '800', android: '800' }),
-    marginBottom: 12,
-  },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 24,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: Platform.select({ ios: '700', android: '700' }),
+      color: colors.text,
+    },
 
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    rowGap: 10,
-    marginBottom: 12,
-  },
+    statsGrid: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 20,
+    },
+    statCard: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      padding: 14,
+      marginHorizontal: 4,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    statIcon: {
+      marginBottom: 8,
+    },
+    statValue: {
+      fontSize: 20,
+      fontWeight: Platform.select({ ios: '800', android: '800' }),
+      color: colors.text,
+    },
+    statLabel: {
+      fontSize: 11,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
 
-  statCard: {
-    width: '48%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  statTitle: { fontSize: 11, color: '#6B7280', marginBottom: 8 },
-  statValue: {
-    fontSize: 22,
-    color: '#2563EB',
-    fontWeight: Platform.select({ ios: '800', android: '800' }),
-    lineHeight: 26,
-  },
-  statSub: { fontSize: 11, color: '#6B7280', marginTop: 2 },
+    calendarCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      paddingVertical: 16,
+      paddingHorizontal: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
 
-  calendarCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-
-  monthHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    marginBottom: 10,
-  },
-  monthTitle: {
-    fontSize: 14,
-    color: '#111827',
-    fontWeight: Platform.select({ ios: '800', android: '800' }),
-  },
-  arrowBtn: { padding: 6 },
-  arrow: { fontSize: 18, color: '#111827' },
-});
+    monthHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 8,
+      marginBottom: 16,
+    },
+    monthTitle: {
+      fontSize: 16,
+      color: colors.text,
+      fontWeight: Platform.select({ ios: '700', android: '700' }),
+    },
+    arrowBtn: {
+      padding: 4,
+    },
+  });
 
 export default HistoryStatsScreen;
