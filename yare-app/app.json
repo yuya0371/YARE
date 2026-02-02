@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "yare-app",
+    "name": "YARE",
     "slug": "yare-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,7 +9,14 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.yuyaosanai.yare",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "写真を記録に添付するために使用します",
+        "NSCameraUsageDescription": "写真を撮影して記録に添付するために使用します",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -43,6 +50,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "83e34e17-e27f-43b4-8fa7-a5e750a0045d"
+      }
     }
   }
 }
